@@ -578,21 +578,41 @@ namespace VDF.Core {
 
 					}
 					else if (needsThumbnails) {
-						list = new List<Image>(positionList.Count);
-						timeStamps = new List<TimeSpan>(positionList.Count);
-						for (int j = 0; j < positionList.Count; j++) {
-							var timestamp = TimeSpan.FromSeconds(entry.Duration.TotalSeconds * positionList[j]);
-							timeStamps.Add(timestamp);
-							var b = FfmpegEngine.GetThumbnail(new FfmpegSettings {
-								File = entry.Path,
-								Position = timestamp,
-								GrayScale = 0,
-							}, Settings.ExtendedFFToolsLogging);
-							if (b == null || b.Length == 0) return ValueTask.CompletedTask;
-							using var byteStream = new MemoryStream(b);
-							var bitmapImage = Image.Load(byteStream);
-							list.Add(bitmapImage);
+						if (entry.Duration.TotalSeconds > 60 * 6){														
+							list = new List<Image>(positionList.Count);
+							timeStamps = new List<TimeSpan>(positionList.Count);
+							for (int j = 0; j < positionList.Count; j++) {
+								var timestamp = TimeSpan.FromSeconds(entry.Duration.TotalSeconds - 60*4 - 60*2 * j/positionList.Count );
+								timeStamps.Add(timestamp);
+								var b = FfmpegEngine.GetThumbnail(new FfmpegSettings {
+									File = entry.Path,
+									Position = timestamp,
+									GrayScale = 0,
+								}, Settings.ExtendedFFToolsLogging);
+								if (b == null || b.Length == 0) return ValueTask.CompletedTask;
+								using var byteStream = new MemoryStream(b);
+								var bitmapImage = Image.Load(byteStream);
+								list.Add(bitmapImage);
+							}	
 						}
+						else {														
+							list = new List<Image>(positionList.Count);
+							timeStamps = new List<TimeSpan>(positionList.Count);
+							for (int j = 0; j < positionList.Count; j++) {
+								var timestamp = TimeSpan.FromSeconds(entry.Duration.TotalSeconds * positionList[j]);
+								timeStamps.Add(timestamp);
+								var b = FfmpegEngine.GetThumbnail(new FfmpegSettings {
+									File = entry.Path,
+									Position = timestamp,
+									GrayScale = 0,
+								}, Settings.ExtendedFFToolsLogging);
+								if (b == null || b.Length == 0) return ValueTask.CompletedTask;
+								using var byteStream = new MemoryStream(b);
+								var bitmapImage = Image.Load(byteStream);
+								list.Add(bitmapImage);
+							}	
+						}
+
 					}
 					Debug.Assert(timeStamps != null);
 					entry.SetThumbnails(list ?? (NoThumbnailImage != null ? new() { NoThumbnailImage } : new()), timeStamps!);
